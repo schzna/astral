@@ -6,7 +6,7 @@ void out_elf64()
 {
     int load_address = 0x400000;
     char *str = "Hello\n";
-    //char *code = "\x48\xc7\xc0\x01\x00\x00\x00\x48\xc7\xc7\x01\x00\x00\x00\x48\xc7\xc6\x78\x00\x40\x00\x48\xc7\xc2\x06\x00\x00\x00\x0f\x05\x48\xc7\xc0\x3c\x00\x00\x00\x0f\x05";
+    code = "\x48\xc7\xc0\x01\x00\x00\x00\x48\xc7\xc7\x01\x00\x00\x00\x48\xc7\xc6\x78\x00\x40\x00\x48\xc7\xc2\x06\x00\x00\x00\x0f\x05\x48\xc7\xc0\x3c\x00\x00\x00\x0f\x05";
     int code_len = code_index;
     int string_len = strlen(str);
     Elf64_Ehdr ehdr = {
@@ -49,43 +49,6 @@ void out_elf64()
 
 int main(int argc, char **argv)
 {
-    if (argc != 2)
-    {
-        printf("invalid the number of argument\n");
-        return 1;
-    }
-
-    code_kind res;
-
-    res = x86_assemble(RS_64, CD_MOV, x86_oprand_from_reg(REG_RAX), x86_oprand_from_imm(1));
-    add_codes(res.code, res.len);
-    free(res.code);
-
-    res = x86_assemble(RS_64, CD_MOV, x86_oprand_from_reg(REG_RDI), x86_oprand_from_imm(1));
-    add_codes(res.code, res.len);
-    free(res.code);
-
-    res = x86_assemble(RS_64, CD_MOV, x86_oprand_from_reg(REG_RSI), x86_oprand_from_imm(0x400078));
-    add_codes(res.code, res.len);
-    free(res.code);
-
-    res = x86_assemble(RS_64, CD_MOV, x86_oprand_from_reg(REG_RDX), x86_oprand_from_imm(6));
-    add_codes(res.code, res.len);
-    free(res.code);
-
-    res = x86_assemble(RS_64, CD_SYSCALL, none, none);
-    add_codes(res.code, res.len);
-    free(res.code);
-
-    res = x86_assemble(RS_64, CD_MOV, x86_oprand_from_reg(REG_RAX), x86_oprand_from_imm(0x3c));
-    add_codes(res.code, res.len);
-    free(res.code);
-
-    res = x86_assemble(RS_64, CD_SYSCALL, none, none);
-    add_codes(res.code, res.len);
-    free(res.code);
-
     out_elf64();
-
     return 0;
 }

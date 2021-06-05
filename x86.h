@@ -30,7 +30,7 @@ typedef enum
     bpl,
     sil,
     dil
-} reg8;
+} reg8_type;
 
 typedef enum
 {
@@ -42,7 +42,7 @@ typedef enum
     r13l,
     r14l,
     r15l
-} reg8_a;
+} reg8a_type;
 
 typedef enum
 {
@@ -58,7 +58,7 @@ typedef enum
     u_bp,
     u_si,
     u_di
-} reg16;
+} reg16_type;
 
 typedef enum
 {
@@ -70,7 +70,7 @@ typedef enum
     r13w,
     r14w,
     r15w
-} reg16_a;
+} reg16a_type;
 
 typedef enum
 {
@@ -86,7 +86,7 @@ typedef enum
     u_ebp,
     u_esi,
     u_edi
-} reg32;
+} reg32_type;
 
 typedef enum
 {
@@ -98,7 +98,7 @@ typedef enum
     r13d,
     r14d,
     r15d
-} reg32_a;
+} reg32a_type;
 
 typedef enum
 {
@@ -118,7 +118,7 @@ typedef enum
     r13,
     r14,
     r15
-} reg64;
+} reg64_type;
 
 //segment registers
 
@@ -130,12 +130,12 @@ typedef enum
     ds,
     fs,
     gs
-} sreg;
+} sreg_type;
 
-typedef char imm8;
-typedef short imm16;
-typedef int imm32;
-typedef long long imm64;
+typedef char imm8_type;
+typedef short imm16_type;
+typedef int imm32_type;
+typedef long long imm64_type;
 
 bit_size size_imm(long long imm)
 {
@@ -156,20 +156,101 @@ bit_size size_imm(long long imm)
 
 typedef struct
 {
-    reg16 base, index;
-    imm16 disp;
+    reg16_type base, index;
+    imm16_type disp;
 } eff_addr16;
 
 typedef struct
 {
-    reg32 base, index;
-    imm32 disp;
+    reg32_type base, index;
+    imm32_type disp;
     int scale;
 } eff_addr32;
 
 typedef struct
 {
-    reg64 base, index;
-    imm64 disp;
+    reg64_type base, index;
+    imm64_type disp;
     int scale;
 } eff_addr64;
+
+typedef enum
+{
+    imm8,
+    imm16,
+    imm32,
+    imm64,
+    r8,
+    r16,
+    r32,
+    r64,
+    rm8,
+    rm16,
+    rm32,
+    rm64,
+    m,
+    m8,
+    m16,
+    m32,
+    m64,
+    m16c16,
+    m16c32,
+    m16c64,
+    m16a16,
+    m16a32,
+    m16a64,
+    m32a32,
+    sreg,
+    moff8,
+    moff16,
+    moff32,
+    moff64,
+    rel8,
+    rel16,
+    rel32,
+    ptr16c16,
+    ptr16c32
+} operand_type;
+
+typedef enum
+{
+    mov
+} opecode_type;
+
+typedef enum
+{
+    en_ZO,
+    en_RM,
+    en_MR,
+    en_MI,
+    en_I,
+    en_A,
+    en_B,
+    en_C,
+    en_RVM
+} encode_type;
+
+/*  opecode_reader
+    opecode -> oprand_checker
+
+    operand_checker
+    operand x operand -> encode_type
+
+    modrm_generator
+    operand x operand -> byte
+
+    sib_generator
+    operand x operand -> byte
+
+    imm_adjuster
+    long long -> imm
+
+    encoding_reader
+    encode_type -> coder
+
+    operand_coder
+    operand x operand x mode -> *byte
+
+    opecode_coder
+    opecode x mode -> *byte
+*/
