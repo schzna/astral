@@ -1,6 +1,7 @@
 #include "astral.h"
 #include "elf.h"
 #include "x86.h"
+#include <stdio.h>
 
 void out_elf64()
 {

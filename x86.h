@@ -1,3 +1,9 @@
+#ifndef INCLUDED_X86_HEADER
+#define INCLUDED_X86_HEADER
+
+#include "code.h"
+#include <stdbool.h>
+#include <stddef.h>
 
 #define none -1
 
@@ -180,10 +186,10 @@ typedef enum
     imm16,
     imm32,
     imm64,
-    r8,
-    r16,
-    r32,
-    r64,
+    reg8,
+    reg16,
+    reg32,
+    reg64,
     rm8,
     rm16,
     rm32,
@@ -209,48 +215,162 @@ typedef enum
     rel16,
     rel32,
     ptr16c16,
-    ptr16c32
+    ptr16c32,
+    r_al,
+    r_ax,
+    r_eax,
+    r_rax
+} operand_indicator;
+
+typedef enum
+{
+    oprand_address,
+    oprand_imm,
+    oprand_reg
 } operand_type;
 
 typedef enum
 {
-    mov
+    opcode_add
 } opecode_type;
 
-typedef enum
+typedef union
 {
-    en_ZO,
-    en_RM,
-    en_MR,
-    en_MI,
-    en_I,
-    en_A,
-    en_B,
-    en_C,
-    en_RVM
-} encode_type;
+    reg8_type r8;
+    reg8a_type r8a;
+    reg16_type r16;
+    reg16a_type r16a;
+    reg32_type r32;
+    reg32a_type r32a;
+    reg64_type r64;
+} reg_union;
 
-/*  opecode_reader
-    opecode -> oprand_checker
+typedef union
+{
+    imm8_type imm8;
+    imm16_type imm16;
+    imm32_type imm32;
+    imm64_type imm64;
+} immediate;
 
-    operand_checker
-    operand x operand -> encode_type
+typedef struct
+{
+    reg_union entity;
+    bit_size size;
+    bit_size mode;
+} registerr;
 
-    modrm_generator
-    operand x operand -> byte
+typedef struct
+{
+    int scale;
+    registerr base, index;
+    long long addr;
+    bool absolute;
+} address;
 
-    sib_generator
-    operand x operand -> byte
+typedef union
+{
+    address addr;
+    immediate imm;
+    registerr reg;
+} operand_union;
 
-    imm_adjuster
-    long long -> imm
+typedef struct
+{
+    operand_union entity;
+    operand_type type;
+} operand;
 
-    encoding_reader
-    encode_type -> coder
+typedef struct
+{
+    operand array[2];
+    size_t num;
+} operands;
 
-    operand_coder
-    operand x operand x mode -> *byte
+typedef struct
+{
+    int size;
+    operand_indicator form1, form2;
+} operands_format;
 
-    opecode_coder
-    opecode x mode -> *byte
-*/
+operands_format no = {.size = 0, .form1 = none, .form2 = none};
+operands_format x86fmt_al_imm8 = {.size = 2, .form1 = r_al, .form2 = imm8};
+
+typedef struct
+{
+    bool sib, modrm, disp, imm;
+} inst_format;
+
+bool x86_match_oprand(operand_indicator form, operand oprand)
+{
+    return false;
+}
+
+bool x86_match_oprands(operands_format form, operands oprands)
+{
+    return false;
+}
+
+typedef struct
+{
+    inst_format fmt;
+    bytes code;
+} pair_opcode_fmt;
+
+pair_opcode_fmt x86_encode_opcode(opecode_type opcode, operands oprands)
+{
+    pair_opcode_fmt res;
+    res.fmt.disp = false;
+    res.fmt.imm = false;
+    res.fmt.modrm = false;
+    res.fmt.sib = false;
+
+    if (opcode == opcode_add)
+    {
+        if (x86_match_oprands(x86fmt_al_imm8, oprands))
+        {
+            res.code = make_bytes_one(0x04);
+            res.fmt.imm = true;
+        }
+    }
+    return res;
+}
+
+bytes x86_gen_modrm(opecode_type opcode, operands oprands)
+{
+    return make_bytes(0, 0);
+}
+
+bytes x86_gen_sib(opecode_type opcode, operands oprands)
+{
+    return make_bytes(0, 0);
+}
+
+bytes x86_encode_imm(long long imm)
+{
+    return make_bytes(0, 0);
+}
+
+bytes x86_assemble(opecode_type opcode, operands oprands)
+{
+    bytes res;
+    pair_opcode_fmt inst_info = x86_encode_opcode(opcode, oprands);
+    if (inst_info.fmt.modrm)
+    {
+        res = join_bytes(res, x86_gen_modrm(opcode, oprands));
+    }
+    if (inst_info.fmt.sib)
+    {
+        res = join_bytes(res, x86_gen_sib(opcode, oprands));
+    }
+    if (inst_info.fmt.disp)
+    {
+    }
+    if (inst_info.fmt.imm)
+    {
+        res = join_bytes(res, x86_encode_imm(oprands.array[0].type));
+    }
+    return res;
+}
+
+#endif
