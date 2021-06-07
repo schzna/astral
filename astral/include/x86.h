@@ -7,10 +7,10 @@
 
 #define none -1
 
-#define bitsize_border8 128
-#define bitsize_border16 32768
-#define bitsize_border32 2147483648
-#define bitsize_border64 9223372036854775808
+#define bitsize_border8 256
+#define bitsize_border16 65536
+#define bitsize_border32 4294967296
+#define bitsize_border64 18446744073709551616
 
 typedef enum
 {
@@ -145,15 +145,15 @@ typedef long long imm64_type;
 
 bit_size size_imm(long long imm)
 {
-    if (-bitsize_border8 <= imm && imm < bitsize_border8)
+    if (imm < bitsize_border8)
     {
         return b8;
     }
-    if (-bitsize_border16 <= imm && imm < bitsize_border16)
+    if (imm < bitsize_border16)
     {
         return b16;
     }
-    if (-bitsize_border32 <= imm && imm < bitsize_border32)
+    if (imm < bitsize_border32)
     {
         return b32;
     }
@@ -257,7 +257,6 @@ typedef struct
 {
     reg_union entity;
     bit_size size;
-    bit_size mode;
 } registerr;
 
 typedef struct
@@ -295,19 +294,76 @@ typedef struct
 
 operands_format no = {.size = 0, .form1 = none, .form2 = none};
 operands_format x86fmt_al_imm8 = {.size = 2, .form1 = r_al, .form2 = imm8};
+operands_format x86fmt_ax_imm16 = {.size = 2, .form1 = r_ax, .form2 = imm16};
+operands_format x86fmt_eax_imm32 = {.size = 2, .form1 = r_eax, .form2 = imm32};
 
 typedef struct
 {
-    bool sib, modrm, disp, imm;
+    bool sib, modrm, disp;
+    bit_size imm_type;
 } inst_format;
 
 bool x86_match_oprand(operand_indicator form, operand oprand)
 {
+    if (oprand.type == oprand_reg)
+    {
+        switch (oprand.entity.reg.size)
+        {
+        case b8:
+            break;
+        case b16:
+            break;
+        case b32:
+            if (oprand.entity.reg.entity.r32 == eax && form == r_eax)
+                return true;
+            return form == reg32 || form == rm32;
+            break;
+        case b64:
+            break;
+        default:
+            break;
+        }
+    }
+    if (oprand.type == oprand_imm)
+    {
+        switch (size_imm(oprand.entity.imm.imm64))
+        {
+        case b8:
+            return form == imm8;
+            break;
+        case b16:
+            return form == imm16 || form == imm8;
+            break;
+        case b32:
+            return form == imm32 || form == imm16 || form == imm8;
+            break;
+        case b64:
+            return form == imm64 || form == imm32 || form == imm16 || form == imm8;
+            break;
+        default:
+            break;
+        }
+    }
     return false;
 }
 
 bool x86_match_oprands(operands_format form, operands oprands)
 {
+    if (form.size == oprands.num)
+    {
+        if (oprands.num == 0)
+        {
+            return true;
+        }
+        if (oprands.num == 1)
+        {
+            return x86_match_oprand(form.form1, oprands.array[0]);
+        }
+        else if (oprands.num == 2)
+        {
+            return x86_match_oprand(form.form1, oprands.array[0]) && x86_match_oprand(form.form2, oprands.array[1]);
+        }
+    }
     return false;
 }
 
@@ -321,7 +377,7 @@ pair_opcode_fmt x86_encode_opcode(opecode_type opcode, operands oprands)
 {
     pair_opcode_fmt res;
     res.fmt.disp = false;
-    res.fmt.imm = false;
+    res.fmt.imm_type = none;
     res.fmt.modrm = false;
     res.fmt.sib = false;
 
@@ -330,7 +386,17 @@ pair_opcode_fmt x86_encode_opcode(opecode_type opcode, operands oprands)
         if (x86_match_oprands(x86fmt_al_imm8, oprands))
         {
             res.code = make_bytes_one(0x04);
-            res.fmt.imm = true;
+            res.fmt.imm_type = b8;
+        }
+        if (x86_match_oprands(x86fmt_ax_imm16, oprands))
+        {
+            res.code = make_bytes_one(0x05);
+            res.fmt.imm_type = b16;
+        }
+        if (x86_match_oprands(x86fmt_eax_imm32, oprands))
+        {
+            res.code = make_bytes_one(0x05);
+            res.fmt.imm_type = b32;
         }
     }
     return res;
@@ -346,15 +412,57 @@ bytes x86_gen_sib(opecode_type opcode, operands oprands)
     return make_bytes(0, 0);
 }
 
-bytes x86_encode_imm(long long imm)
+bytes x86_encode_imm(immediate imme, bit_size size)
 {
-    return make_bytes(0, 0);
+    bytes res = make_bytes(0, 0);
+    long long imm = imme.imm64;
+    if (size == b8)
+    {
+        res.len = 1;
+        res.pointer = (byte *)calloc(sizeof(byte), 1);
+        res.pointer[0] = imm & 0xff;
+        return res;
+    }
+    if (size == b16)
+    {
+        res.len = 2;
+        res.pointer = (byte *)calloc(sizeof(byte), 2);
+        res.pointer[0] = imm & 0x00ff;
+        res.pointer[1] = (imm & 0xff00) / 0x100;
+        return res;
+    }
+    if (size == b32)
+    {
+        res.len = 4;
+        res.pointer = (byte *)calloc(sizeof(byte), 4);
+        res.pointer[3] = imm & 0x000000ff;
+        res.pointer[2] = (imm & 0x0000ff00) / 0x100;
+        res.pointer[1] = (imm & 0x00ff0000) / 0x10000;
+        res.pointer[0] = (imm & 0xff000000) / 0x1000000;
+        return res;
+    }
+    if (size == b64)
+    {
+        res.len = 4;
+        res.pointer = (byte *)calloc(sizeof(byte), 8);
+        res.pointer[0] = imm & 0x000000ff;
+        res.pointer[1] = imm & 0x0000ff00;
+        res.pointer[2] = imm & 0x00ff0000;
+        res.pointer[3] = imm & 0xff000000;
+        res.pointer[4] = imm & 0x000000ff00000000;
+        res.pointer[5] = imm & 0x0000ff0000000000;
+        res.pointer[6] = imm & 0x00ff000000000000;
+        res.pointer[7] = imm & 0xff00000000000000;
+        return res;
+    }
+    return res;
 }
 
 bytes x86_assemble(opecode_type opcode, operands oprands)
 {
     bytes res;
     pair_opcode_fmt inst_info = x86_encode_opcode(opcode, oprands);
+    res = inst_info.code;
     if (inst_info.fmt.modrm)
     {
         res = join_bytes(res, x86_gen_modrm(opcode, oprands));
@@ -366,9 +474,9 @@ bytes x86_assemble(opecode_type opcode, operands oprands)
     if (inst_info.fmt.disp)
     {
     }
-    if (inst_info.fmt.imm)
+    if (inst_info.fmt.imm_type >= 0)
     {
-        res = join_bytes(res, x86_encode_imm(oprands.array[0].type));
+        res = join_bytes(res, x86_encode_imm(oprands.array[1].entity.imm, inst_info.fmt.imm_type));
     }
     return res;
 }
