@@ -373,7 +373,7 @@ typedef struct
     bytes code;
 } pair_opcode_fmt;
 
-pair_opcode_fmt x86_encode_opcode(opecode_type opcode, operands oprands)
+pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands oprands)
 {
     pair_opcode_fmt res;
     res.fmt.disp = false;
@@ -458,10 +458,10 @@ bytes x86_encode_imm(immediate imme, bit_size size)
     return res;
 }
 
-bytes x86_assemble(opecode_type opcode, operands oprands)
+bytes x86_assemble(bit_size mode, opecode_type opcode, operands oprands)
 {
     bytes res;
-    pair_opcode_fmt inst_info = x86_encode_opcode(opcode, oprands);
+    pair_opcode_fmt inst_info = x86_encode_opcode(mode, opcode, oprands);
     res = inst_info.code;
     if (inst_info.fmt.modrm)
     {

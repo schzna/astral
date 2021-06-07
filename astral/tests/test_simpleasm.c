@@ -10,7 +10,7 @@ int main()
     ops.array[0].entity.reg.entity.r32 = eax;
     ops.array[1].type = oprand_imm;
     ops.array[1].entity.imm.imm32 = 0x12345678;
-    bytes b = x86_assemble(opcode_add, ops);
+    bytes b = x86_assemble(b32, opcode_add, ops);
     assert(b.len == 5);
     assert(b.pointer[0] == 0x05);
     assert(b.pointer[1] == 0x12);
