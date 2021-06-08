@@ -12,17 +12,31 @@ void test_inst_aaa()
 
 void test_inst_aad()
 {
-    const char *name = "test_inst_aad";
     bytes b = x86_assemble(b32, opcode_aad, x86_make_operands_no());
-    assert(b.len == 2 && name);
+    assert(b.len == 2 && "test_inst_aad");
     assert(b.pointer[0] == 0xd5 && "test_inst_aad");
     assert(b.pointer[1] == 0x0a && "test_inst_aad");
     free(b.pointer);
 
     b = x86_assemble(b32, opcode_aad, x86_make_operands_one(x86_make_operand_imm(b8, 0x02)));
-    assert(b.len == 2 && name);
+    assert(b.len == 2 && "test_inst_aad");
     assert(b.pointer[0] == 0xd5 && "test_inst_aad");
     assert(b.pointer[1] == 0x02 && "test_inst_aad");
+    free(b.pointer);
+}
+
+void test_inst_aam()
+{
+    bytes b = x86_assemble(b32, opcode_aam, x86_make_operands_no());
+    assert(b.len == 2 && "test_inst_aam");
+    assert(b.pointer[0] == 0xd4 && "test_inst_aam");
+    assert(b.pointer[1] == 0x0a && "test_inst_aam");
+    free(b.pointer);
+
+    b = x86_assemble(b32, opcode_aam, x86_make_operands_one(x86_make_operand_imm(b8, 0x14)));
+    assert(b.len == 2 && "test_inst_aam");
+    assert(b.pointer[0] == 0xd4 && "test_inst_aam");
+    assert(b.pointer[1] == 0x14 && "test_inst_aam");
     free(b.pointer);
 }
 
@@ -30,5 +44,6 @@ int main()
 {
     test_inst_aaa();
     test_inst_aad();
+    test_inst_aam();
     return 0;
 }
