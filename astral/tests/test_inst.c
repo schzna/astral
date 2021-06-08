@@ -40,6 +40,14 @@ void test_inst_aam()
     free(b.pointer);
 }
 
+void test_inst_aas()
+{
+    bytes b = x86_assemble(b32, opcode_aas, x86_make_operands_no());
+    assert(b.len == 1 && "test_inst_aas");
+    assert(b.pointer[0] == 0xd4 && "test_inst_aas");
+    free(b.pointer);
+}
+
 int main()
 {
     test_inst_aaa();

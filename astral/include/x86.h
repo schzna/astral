@@ -234,6 +234,7 @@ typedef enum
     opcode_aaa,
     opcode_aad,
     opcode_aam,
+    opcode_aas,
     opcode_add
 } opecode_type;
 
@@ -524,6 +525,13 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
             res.code = make_bytes_one(0xd4);
             res.fmt.imm_i = 0;
             res.fmt.imm_type = b8;
+        }
+    }
+    if (opcode == opcode_aas)
+    {
+        if (x86_match_oprands(x86fmt_no, oprands))
+        {
+            res.code = make_bytes_one(0x3f);
         }
     }
     if (opcode == opcode_add)
