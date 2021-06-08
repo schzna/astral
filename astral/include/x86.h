@@ -232,6 +232,7 @@ typedef enum
 typedef enum
 {
     opcode_aaa,
+    opcode_aad,
     opcode_add
 } opecode_type;
 
@@ -252,12 +253,19 @@ typedef union
     imm16_type imm16;
     imm32_type imm32;
     imm64_type imm64;
+} imm_union;
+
+typedef struct
+{
+    imm_union entity;
+    bit_size size;
 } immediate;
 
 typedef struct
 {
     reg_union entity;
     bit_size size;
+    bool additional;
 } registerr;
 
 typedef struct
@@ -281,6 +289,85 @@ typedef struct
     operand_type type;
 } operand;
 
+operand x86_make_operand_imm(bit_size size, long long val)
+{
+    operand res;
+    res.type = oprand_imm;
+    res.entity.imm.size = size;
+    res.entity.imm.entity.imm64 = val;
+    return res;
+}
+
+operand x86_make_operand_reg8(reg8_type reg)
+{
+    operand res;
+    res.type = oprand_reg;
+    res.entity.reg.size = b8;
+    res.entity.reg.entity.r8 = reg;
+    res.entity.reg.additional = false;
+    return res;
+}
+
+operand x86_make_operand_reg8a(reg8a_type reg)
+{
+    operand res;
+    res.type = oprand_reg;
+    res.entity.reg.size = b8;
+    res.entity.reg.entity.r8a = reg;
+    res.entity.reg.additional = true;
+    return res;
+}
+
+operand x86_make_operand_reg16(reg16_type reg)
+{
+    operand res;
+    res.type = oprand_reg;
+    res.entity.reg.size = b16;
+    res.entity.reg.entity.r16 = reg;
+    res.entity.reg.additional = false;
+    return res;
+}
+
+operand x86_make_operand_reg16a(reg16a_type reg)
+{
+    operand res;
+    res.type = oprand_reg;
+    res.entity.reg.size = b16;
+    res.entity.reg.entity.r16a = reg;
+    res.entity.reg.additional = true;
+    return res;
+}
+
+operand x86_make_operand_reg32(reg32_type reg)
+{
+    operand res;
+    res.type = oprand_reg;
+    res.entity.reg.size = b32;
+    res.entity.reg.entity.r32 = reg;
+    res.entity.reg.additional = false;
+    return res;
+}
+
+operand x86_make_operand_reg32a(reg32a_type reg)
+{
+    operand res;
+    res.type = oprand_reg;
+    res.entity.reg.size = b32;
+    res.entity.reg.entity.r32a = reg;
+    res.entity.reg.additional = true;
+    return res;
+}
+
+operand x86_make_operand_reg64(reg64_type reg)
+{
+    operand res;
+    res.type = oprand_reg;
+    res.entity.reg.size = b64;
+    res.entity.reg.entity.r64 = reg;
+    res.entity.reg.additional = true;
+    return res;
+}
+
 typedef struct
 {
     operand array[2];
@@ -293,14 +380,16 @@ typedef struct
     operand_indicator form1, form2;
 } operands_format;
 
-operands_format no = {.size = 0, .form1 = none, .form2 = none};
+operands_format x86fmt_no = {.size = 0, .form1 = none, .form2 = none};
 operands_format x86fmt_al_imm8 = {.size = 2, .form1 = r_al, .form2 = imm8};
 operands_format x86fmt_ax_imm16 = {.size = 2, .form1 = r_ax, .form2 = imm16};
 operands_format x86fmt_eax_imm32 = {.size = 2, .form1 = r_eax, .form2 = imm32};
+operands_format x86fmt_imm8 = {.size = 1, .form1 = imm8};
 
 typedef struct
 {
     bool sib, modrm, disp;
+    int addr_i, imm_i, reg_i;
     bit_size imm_type;
 } inst_format;
 
@@ -327,7 +416,7 @@ bool x86_match_oprand(operand_indicator form, operand oprand)
     }
     if (oprand.type == oprand_imm)
     {
-        switch (size_imm(oprand.entity.imm.imm64))
+        switch (size_imm(oprand.entity.imm.entity.imm64))
         {
         case b8:
             return form == imm8;
@@ -368,6 +457,30 @@ bool x86_match_oprands(operands_format form, operands oprands)
     return false;
 }
 
+operands x86_make_operands_no()
+{
+    operands ops;
+    ops.num = 0;
+    return ops;
+}
+
+operands x86_make_operands_one(operand oprand)
+{
+    operands ops;
+    ops.num = 1;
+    ops.array[0] = oprand;
+    return ops;
+}
+
+operands x86_make_operands_two(operand oprand1, operand oprand2)
+{
+    operands ops;
+    ops.num = 2;
+    ops.array[0] = oprand1;
+    ops.array[1] = oprand2;
+    return ops;
+}
+
 typedef struct
 {
     inst_format fmt;
@@ -386,21 +499,37 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
     {
         res.code = make_bytes_one(0x37);
     }
+    if (opcode == opcode_aad)
+    {
+        if (x86_match_oprands(x86fmt_imm8, oprands))
+        {
+            res.code = make_bytes_one(0xd5);
+            res.fmt.imm_i = 0;
+            res.fmt.imm_type = b8;
+        }
+        if (x86_match_oprands(x86fmt_no, oprands))
+        {
+            res.code = make_bytes_two(0xd5, 0x0a);
+        }
+    }
     if (opcode == opcode_add)
     {
         if (x86_match_oprands(x86fmt_al_imm8, oprands))
         {
             res.code = make_bytes_one(0x04);
+            res.fmt.imm_i = 1;
             res.fmt.imm_type = b8;
         }
         if (x86_match_oprands(x86fmt_ax_imm16, oprands))
         {
             res.code = make_bytes_two(0x66, 0x05);
+            res.fmt.imm_i = 1;
             res.fmt.imm_type = b16;
         }
         if (x86_match_oprands(x86fmt_eax_imm32, oprands))
         {
             res.code = make_bytes_one(0x05);
+            res.fmt.imm_i = 1;
             res.fmt.imm_type = b32;
         }
     }
@@ -420,9 +549,10 @@ bytes x86_gen_sib(opecode_type opcode, operands oprands)
 bytes x86_encode_imm(immediate imme, bit_size size)
 {
     bytes res = make_bytes(0, 0);
-    long long imm = imme.imm64;
+    long long imm = 0;
     if (size == b8)
     {
+        imm = imme.entity.imm8;
         res.len = 1;
         res.pointer = (byte *)calloc(sizeof(byte), 1);
         res.pointer[0] = imm & 0xff;
@@ -430,6 +560,7 @@ bytes x86_encode_imm(immediate imme, bit_size size)
     }
     if (size == b16)
     {
+        imm = imme.entity.imm16;
         res.len = 2;
         res.pointer = (byte *)calloc(sizeof(byte), 2);
         res.pointer[0] = imm & 0x00ff;
@@ -438,6 +569,7 @@ bytes x86_encode_imm(immediate imme, bit_size size)
     }
     if (size == b32)
     {
+        imm = imme.entity.imm32;
         res.len = 4;
         res.pointer = (byte *)calloc(sizeof(byte), 4);
         res.pointer[3] = imm & 0x000000ff;
@@ -448,6 +580,7 @@ bytes x86_encode_imm(immediate imme, bit_size size)
     }
     if (size == b64)
     {
+        imm = imme.entity.imm64;
         res.len = 4;
         res.pointer = (byte *)calloc(sizeof(byte), 8);
         res.pointer[0] = imm & 0x000000ff;
@@ -479,9 +612,9 @@ bytes x86_assemble(bit_size mode, opecode_type opcode, operands oprands)
     if (inst_info.fmt.disp)
     {
     }
-    if (inst_info.fmt.imm_type >= 0)
+    if (inst_info.fmt.imm_type >= 0 && inst_info.fmt.imm_i >= 0 && inst_info.fmt.imm_i <= 1)
     {
-        res = join_bytes(res, x86_encode_imm(oprands.array[1].entity.imm, inst_info.fmt.imm_type));
+        res = join_bytes(res, x86_encode_imm(oprands.array[inst_info.fmt.imm_i].entity.imm, inst_info.fmt.imm_type));
     }
     return res;
 }
