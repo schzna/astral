@@ -231,6 +231,7 @@ typedef enum
 
 typedef enum
 {
+    opcode_aaa,
     opcode_add
 } opecode_type;
 
@@ -381,6 +382,10 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
     res.fmt.modrm = false;
     res.fmt.sib = false;
 
+    if (opcode == opcode_aaa)
+    {
+        res.code = make_bytes_one(0x37);
+    }
     if (opcode == opcode_add)
     {
         if (x86_match_oprands(x86fmt_al_imm8, oprands))

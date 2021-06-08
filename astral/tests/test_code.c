@@ -10,5 +10,6 @@ int main()
     assert(b.pointer[1] == 0x23);
     assert(b.pointer[2] == 0x56);
     assert(b.pointer[3] == 0x67);
+    free(b.pointer);
     return 0;
 }

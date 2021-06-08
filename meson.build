@@ -9,6 +9,9 @@ t2 = executable('test_simpleasm', 'astral/tests/test_simpleasm.c', include_direc
 
 t3 = executable('test_code', 'astral/tests/test_code.c', include_directories : includes)
 
+t4 = executable('test_inst', 'astral/tests/test_inst.c', include_directories : includes)
+
 test('size_num test', t1)
 test('add ax, imm16 test', t2)
 test('code.h test', t3)
+test('instructions test', t4)
