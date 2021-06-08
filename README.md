@@ -4,6 +4,8 @@ none
 
 ## License
 
-astral is under GPL for [elf.h](https://github.com/yuki74w/astral/blob/master/astral/include/elf.h).
+astral is under GPLv3.
 
-elf.h is a part of GNU C Library.
+License text is [here](https://github.com/yuki74w/astral/blob/master/License)
+
+elf.h that astral contains is a part of GNU C Library.
