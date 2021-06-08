@@ -390,7 +390,7 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
         }
         if (x86_match_oprands(x86fmt_ax_imm16, oprands))
         {
-            res.code = make_bytes_one(0x05);
+            res.code = make_bytes_two(0x66, 0x05);
             res.fmt.imm_type = b16;
         }
         if (x86_match_oprands(x86fmt_eax_imm32, oprands))
