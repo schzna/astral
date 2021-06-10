@@ -3,13 +3,6 @@
 
 int main()
 {
-    operands ops;
-    ops.num = 2;
-    ops.array[0].type = oprand_reg;
-    ops.array[0].entity.reg.size = b32;
-    ops.array[0].entity.reg.entity.r32 = eax;
-    ops.array[1].type = oprand_imm;
-    ops.array[1].entity.imm.entity.imm32 = 0x12345678;
     bytes b = x86_assemble(b32, opcode_add, x86_make_operands_two(x86_make_operand_reg32(eax), x86_make_operand_imm(b32, 0x12345678)));
     assert(b.len == 5);
     assert(b.pointer[0] == 0x05);
