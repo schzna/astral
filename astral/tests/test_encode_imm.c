@@ -9,5 +9,6 @@ int main()
     bytes b = x86_encode_imm(imm, b8);
     assert(b.len == 1);
     assert(b.pointer[0] == 0x0f);
+    free(b.pointer);
     return 0;
 }
