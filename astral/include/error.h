@@ -60,6 +60,11 @@ void clear_error(error_bundle *errors)
     init_error_bundle(errors);
 }
 
+bool is_error(const error_bundle *errors)
+{
+    return errors->size > 0;
+}
+
 error_bundle global_error_entity = {
     .initialized = false};
 
