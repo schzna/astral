@@ -1,5 +1,5 @@
-#ifndef INCLUDED_CODE_H
-#define INCLUDED_CODE_H
+#ifndef INCLUDED_ERROR_H
+#define INCLUDED_ERROR_H
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
