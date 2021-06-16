@@ -16,31 +16,29 @@ typedef struct
     size_t capacity, size;
 } error_bundle;
 
-error_bundle init_error_bundle()
+void init_error_bundle(error_bundle *errors)
 {
-    error_bundle res;
-    res.initialized = true;
-    res.capacity = 10;
-    res.size = 0;
-    res.info = (error_info *)calloc(sizeof(error_info), res.capacity);
-    return res;
+    errors->initialized = true;
+    errors->capacity = 10;
+    errors->size = 0;
+    errors->info = (error_info *)calloc(sizeof(error_info), errors->capacity);
 }
 
-void push_error(error_bundle dest, error_info eri)
+void push_error(error_bundle *dest, error_info eri)
 {
-    if (!dest.initialized)
+    if (!dest->initialized)
     {
         init_error_bundle(dest);
     }
-    if (dest.size >= dest.capacity)
+    if (dest->size >= dest->capacity)
     {
-        dest.capacity += 5;
-        dest.info = (error_info *)realloc(dest.info, sizeof(error_info) * dest.capacity);
+        dest->capacity += 5;
+        dest->info = (error_info *)realloc(dest->info, sizeof(error_info) * dest->capacity);
     }
-    dest.info[dest.size++] = eri;
+    dest->info[dest->size++] = eri;
 }
 
-void error_msg(error_bundle dest, const char *msg)
+void error_msg(error_bundle *dest, const char *msg)
 {
     error_info eri;
     eri.msg = msg;
@@ -52,11 +50,19 @@ void print_error(error_bundle errors)
 {
     for (size_t i = 0; i < errors.size; i++)
     {
-        printf("%50s\n", errors.info[i].msg);
+        fprintf(stderr, "%50s\n", errors.info[i].msg);
     }
 }
 
-error_bundle global_error = {
+void clear_error(error_bundle *errors)
+{
+    free(errors->info);
+    init_error_bundle(errors);
+}
+
+error_bundle global_error_entity = {
     .initialized = false};
+
+error_bundle *global_error = &global_error_entity;
 
 #endif
