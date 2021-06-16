@@ -2,6 +2,7 @@
 #define INCLUDED_X86_HEADER
 
 #include "code.h"
+#include "error.h"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -236,6 +237,14 @@ bit_size size_reg(reg r)
     return none;
 }
 
+void valid_reg(reg r)
+{
+    if (!(0 <= r && r < 94))
+    {
+        error_msg(global_error, "regsiter is not valid");
+    }
+}
+
 typedef struct
 {
     int scale;
@@ -262,6 +271,21 @@ bool match_addr_two(address addr, reg r1, reg r2)
 bool match_addr_full(address addr, reg base, reg index, int scale)
 {
     return (addr.base == base && addr.index == index && addr.scale == scale);
+}
+
+void valid_addr(address addr)
+{
+    if (addr.base != none && addr.index != none)
+    {
+        if (size_reg(addr.base) != size_reg(addr.index))
+        {
+            error_msg(global_error, "invalid effective");
+        }
+        if (!(addr.scale == 1 || addr.scale == 2 || addr.scale == 4 || addr.scale == 8))
+        {
+            error_msg(global_error, "invalid scale");
+        }
+    }
 }
 
 typedef union
@@ -419,20 +443,28 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
     res.fmt.modrm = false;
     res.fmt.sib = false;
 
+    bool matched = false;
+
     if (opcode == opcode_aaa)
     {
-        res.code = make_bytes_one(0x37);
+        if (x86_match_oprands(x86fmt_no, oprands))
+        {
+            matched = true;
+            res.code = make_bytes_one(0x37);
+        }
     }
     else if (opcode == opcode_aad)
     {
         if (x86_match_oprands(x86fmt_imm8, oprands))
         {
+            matched = true;
             res.code = make_bytes_one(0xd5);
             res.fmt.imm_i = 0;
             res.fmt.imm_type = b8;
         }
         if (x86_match_oprands(x86fmt_no, oprands))
         {
+            matched = true;
             res.code = make_bytes_two(0xd5, 0x0a);
         }
     }
@@ -440,10 +472,12 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
     {
         if (x86_match_oprands(x86fmt_no, oprands))
         {
+            matched = true;
             res.code = make_bytes_two(0xd4, 0x0a);
         }
         if (x86_match_oprands(x86fmt_imm8, oprands))
         {
+            matched = true;
             res.code = make_bytes_one(0xd4);
             res.fmt.imm_i = 0;
             res.fmt.imm_type = b8;
@@ -453,6 +487,7 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
     {
         if (x86_match_oprands(x86fmt_no, oprands))
         {
+            matched = true;
             res.code = make_bytes_one(0x3f);
         }
     }
@@ -460,6 +495,7 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
     {
         if (x86_match_oprands(x86fmt_al_imm8, oprands))
         {
+            matched = true;
             res.code = make_bytes_one(0x14);
             res.fmt.imm_type = b8;
             res.fmt.imm_i = 1;
@@ -467,6 +503,7 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
         }
         if (x86_match_oprands(x86fmt_ax_imm16, oprands))
         {
+            matched = true;
             res.code = make_bytes_two(0x66, 0x15);
             res.fmt.imm_type = b16;
             res.fmt.imm_i = 1;
@@ -474,6 +511,7 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
         }
         if (x86_match_oprands(x86fmt_eax_imm32, oprands))
         {
+            matched = true;
             res.code = make_bytes_one(0x15);
             res.fmt.imm_type = b32;
             res.fmt.imm_i = 1;
@@ -481,6 +519,7 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
         }
         if (x86_match_oprands(x86fmt_rax_imm64, oprands))
         {
+            matched = true;
             res.code = make_bytes_two(0x48, 0x15);
             res.fmt.imm_type = b64;
             res.fmt.imm_i = 1;
@@ -491,22 +530,29 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
     {
         if (x86_match_oprands(x86fmt_al_imm8, oprands))
         {
+            matched = true;
             res.code = make_bytes_one(0x04);
             res.fmt.imm_i = 1;
             res.fmt.imm_type = b8;
         }
         if (x86_match_oprands(x86fmt_ax_imm16, oprands))
         {
+            matched = true;
             res.code = make_bytes_two(0x66, 0x05);
             res.fmt.imm_i = 1;
             res.fmt.imm_type = b16;
         }
         if (x86_match_oprands(x86fmt_eax_imm32, oprands))
         {
+            matched = true;
             res.code = make_bytes_one(0x05);
             res.fmt.imm_i = 1;
             res.fmt.imm_type = b32;
         }
+    }
+    if (!matched)
+    {
+        error_msg(global_error, "Format error.");
     }
     return res;
 }
@@ -514,18 +560,27 @@ pair_opcode_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands o
 bytes x86_gen_modrm(int digit, int rm_i, imm64_type disp, int reg_i, operands oprands)
 {
     byte res = 0;
-
     res += ((digit == -1) ? value_reg(oprands.array[reg_i].entity.r) : digit) * 8;
 
     operand rm = oprands.array[rm_i];
 
     if (rm.type == oprand_reg)
     {
+        valid_reg(rm.entity.r);
+        if (size_reg(rm.entity.r) != size_reg(oprands.array[reg_i].entity.r))
+        {
+            error_msg(global_error, "Different size of 2 registers");
+        }
         res += 0b11000000;
         res += ((digit == -1) ? value_reg(rm.entity.r) : digit);
     }
     else
     {
+        valid_addr(rm.entity.addr);
+        if (size_addr(rm.entity.addr) != size_reg(oprands.array[reg_i].entity.r))
+        {
+            error_msg(global_error, "the size of effective address differs from the size of register");
+        }
         address addr = rm.entity.addr;
         switch (size_addr(addr))
         {

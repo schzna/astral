@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <include/x86.h>
 #include <stdio.h>
+#include <string.h>
 
 void test_inst_aaa()
 {
@@ -8,6 +9,14 @@ void test_inst_aaa()
     assert(b.len == 1 && "test_inst_aaa");
     assert(b.pointer[0] == 0x37 && "test_inst_aaa");
     free(b.pointer);
+
+    clear_error(global_error);
+    b = x86_assemble(b32, opcode_aaa, x86_make_operands_one(x86_make_operand_imm(b8, 2)));
+    assert(is_error(global_error));
+    if (!is_error(global_error))
+    {
+        free(b.pointer);
+    }
 }
 
 void test_inst_aad()
