@@ -46,11 +46,11 @@ void error_msg(error_bundle *dest, const char *msg)
     push_error(dest, eri);
 }
 
-void print_error(error_bundle errors)
+void print_error(const error_bundle *errors)
 {
-    for (size_t i = 0; i < errors.size; i++)
+    for (size_t i = 0; i < errors->size; i++)
     {
-        fprintf(stderr, "%50s\n", errors.info[i].msg);
+        fprintf(stderr, "%.50s\n", errors->info[i].msg);
     }
 }
 

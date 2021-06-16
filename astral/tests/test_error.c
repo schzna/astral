@@ -15,6 +15,7 @@ int main()
     clear_error(global_error);
     error_msg(global_error, "error1");
     assert(strcmp(global_error->info[0].msg, "error1") == 0);
+    print_error(global_error);
     free(global_error->info);
     return 0;
 }
