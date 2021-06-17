@@ -14,6 +14,13 @@
 
 typedef enum
 {
+    x32,
+    compatibility,
+    x64
+} mode_type;
+
+typedef enum
+{
     b8,
     b16,
     b32,
@@ -336,6 +343,7 @@ operands_format x86fmt_al_imm8 = {.size = 2, .form1 = r_al, .form2 = imm8};
 operands_format x86fmt_ax_imm16 = {.size = 2, .form1 = r_ax, .form2 = imm16};
 operands_format x86fmt_eax_imm32 = {.size = 2, .form1 = r_eax, .form2 = imm32};
 operands_format x86fmt_rax_imm64 = {.size = 2, .form1 = r_rax, .form2 = imm64};
+operands_format x86fmt_rax_imm32 = {.size = 2, .form1 = r_rax, .form2 = imm32};
 
 operands_format x86fmt_imm8 = {.size = 1, .form1 = imm8};
 
@@ -343,6 +351,7 @@ operands_format x86fmt_rm8_imm8 = {.size = 2, .form1 = rm8, .form2 = imm8};
 operands_format x86fmt_rm16_imm16 = {.size = 2, .form1 = rm16, .form2 = imm16};
 operands_format x86fmt_rm32_imm32 = {.size = 2, .form1 = rm32, .form2 = imm32};
 operands_format x86fmt_rm64_imm64 = {.size = 2, .form1 = rm64, .form2 = imm64};
+operands_format x86fmt_rm64_imm32 = {.size = 2, .form1 = rm64, .form2 = imm32};
 
 operands_format x86fmt_rm16_imm8 = {.size = 2, .form1 = rm16, .form2 = imm8};
 operands_format x86fmt_rm32_imm8 = {.size = 2, .form1 = rm32, .form2 = imm8};
@@ -482,7 +491,7 @@ typedef struct
     bytes code;
 } pair_code_fmt;
 
-pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands oprands)
+pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands oprands)
 {
     pair_code_fmt res;
     res.fmt.imm_type = none;
@@ -491,6 +500,9 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
     res.fmt.rm_i = -1;
     res.fmt.digit = -1;
 
+    bool flag_x64 = false;
+    bool flag_comp = false;
+
     bool matched = false;
 
     if (opcode == opcode_aaa)
@@ -498,6 +510,7 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_no, oprands))
         {
             matched = true;
+            flag_comp = true;
             res.code = make_bytes_one(0x37);
         }
     }
@@ -506,6 +519,7 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_imm8, oprands))
         {
             matched = true;
+            flag_comp = true;
             res.code = make_bytes_one(0xd5);
             res.fmt.imm_i = 0;
             res.fmt.imm_type = b8;
@@ -513,6 +527,7 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_no, oprands))
         {
             matched = true;
+            flag_comp = true;
             res.code = make_bytes_two(0xd5, 0x0a);
         }
     }
@@ -521,11 +536,13 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_no, oprands))
         {
             matched = true;
+            flag_comp = true;
             res.code = make_bytes_two(0xd4, 0x0a);
         }
         if (x86_match_oprands(x86fmt_imm8, oprands))
         {
             matched = true;
+            flag_comp = true;
             res.code = make_bytes_one(0xd4);
             res.fmt.imm_i = 0;
             res.fmt.imm_type = b8;
@@ -536,6 +553,7 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_no, oprands))
         {
             matched = true;
+            flag_comp = true;
             res.code = make_bytes_one(0x3f);
         }
     }
@@ -544,6 +562,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_al_imm8, oprands))
         {
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_one(0x14);
             res.fmt.imm_type = b8;
             res.fmt.imm_i = 1;
@@ -552,6 +572,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_ax_imm16, oprands))
         {
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_two(0x66, 0x15);
             res.fmt.imm_type = b16;
             res.fmt.imm_i = 1;
@@ -560,14 +582,18 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_eax_imm32, oprands))
         {
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_one(0x15);
             res.fmt.imm_type = b32;
             res.fmt.imm_i = 1;
             res.fmt.reg_i = 0;
         }
-        if (x86_match_oprands(x86fmt_rax_imm64, oprands))
+        if (x86_match_oprands(x86fmt_rax_imm32, oprands))
         {
             matched = true;
+            flag_comp = false;
+            flag_x64 = true;
             res.code = make_bytes_two(0x48, 0x15);
             res.fmt.imm_type = b64;
             res.fmt.imm_i = 1;
@@ -576,6 +602,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_rm8_imm8, oprands))
         {
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_one(0x80);
             res.fmt.imm_type = b8;
             res.fmt.imm_i = 1;
@@ -585,6 +613,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_rm16_imm16, oprands))
         {
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_one(0x81);
             res.fmt.imm_type = b16;
             res.fmt.imm_i = 1;
@@ -595,15 +625,19 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         {
 
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_one(0x81);
             res.fmt.imm_type = b32;
             res.fmt.imm_i = 1;
             res.fmt.rm_i = 0;
             res.fmt.digit = 2;
         }
-        if (x86_match_oprands(x86fmt_rm64_imm64, oprands))
+        if (x86_match_oprands(x86fmt_rm64_imm32, oprands))
         {
             matched = true;
+            flag_comp = false;
+            flag_x64 = true;
             res.code = make_bytes_two(0x48, 0x81);
             res.fmt.imm_type = b64;
             res.fmt.imm_i = 1;
@@ -613,6 +647,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_rm8_r8, oprands))
         {
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_one(0x10);
             res.fmt.imm_type = b8;
             res.fmt.rm_i = 0;
@@ -621,6 +657,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_rm16_r16, oprands))
         {
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_one(0x11);
             res.fmt.imm_type = b16;
             res.fmt.rm_i = 0;
@@ -629,6 +667,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_rm32_r32, oprands))
         {
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_one(0x11);
             res.fmt.imm_type = b32;
             res.fmt.rm_i = 0;
@@ -637,6 +677,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (x86_match_oprands(x86fmt_rm64_r64, oprands))
         {
             matched = true;
+            flag_comp = false;
+            flag_x64 = true;
             res.code = make_bytes_two(0x48, 0x11);
             res.fmt.imm_type = b64;
             res.fmt.rm_i = 0;
@@ -645,6 +687,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (!matched && x86_match_oprands(x86fmt_r8_rm8, oprands))
         {
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_one(0x12);
             res.fmt.imm_type = b8;
             res.fmt.rm_i = 0;
@@ -653,6 +697,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (!matched && x86_match_oprands(x86fmt_r16_rm16, oprands))
         {
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_one(0x13);
             res.fmt.imm_type = b16;
             res.fmt.rm_i = 0;
@@ -661,6 +707,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (!matched && x86_match_oprands(x86fmt_r32_rm32, oprands))
         {
             matched = true;
+            flag_comp = true;
+            flag_x64 = true;
             res.code = make_bytes_one(0x13);
             res.fmt.imm_type = b32;
             res.fmt.rm_i = 0;
@@ -669,6 +717,8 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
         if (!matched && x86_match_oprands(x86fmt_r64_rm64, oprands))
         {
             matched = true;
+            flag_comp = false;
+            flag_x64 = true;
             res.code = make_bytes_two(0x48, 0x13);
             res.fmt.imm_type = b64;
             res.fmt.rm_i = 0;
@@ -701,7 +751,15 @@ pair_code_fmt x86_encode_opcode(bit_size mode, opecode_type opcode, operands opr
     }
     if (!matched)
     {
-        error_msg(global_error, "Format error.");
+        error_msg(global_error, "format error.");
+    }
+    if (mode == x64 && !flag_x64)
+    {
+        error_msg(global_error, "this instruction is not supported in 64bit-mode.");
+    }
+    if (mode == compatibility && !flag_comp)
+    {
+        error_msg(global_error, "this instruction is not supported in compatibility-mode.");
     }
     return res;
 }
@@ -914,7 +972,7 @@ bytes x86_encode_oprands(inst_info fmt, operands oprands)
     return info.code;
 }
 
-bytes x86_assemble(bit_size mode, opecode_type opcode, operands oprands)
+bytes x86_assemble(mode_type mode, opecode_type opcode, operands oprands)
 {
     pair_code_fmt inst_info = x86_encode_opcode(mode, opcode, oprands);
     inst_info.code = join_bytes(inst_info.code, x86_encode_oprands(inst_info.fmt, oprands));
