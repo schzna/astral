@@ -1,6 +1,6 @@
 # astral
 
-none
+astral will be an assembler.
 
 ## License
 
