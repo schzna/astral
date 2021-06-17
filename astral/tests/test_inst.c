@@ -9,14 +9,6 @@ void test_inst_aaa()
     assert(b.len == 1 && "test_inst_aaa");
     assert(b.pointer[0] == 0x37 && "test_inst_aaa");
     free(b.pointer);
-
-    clear_error(global_error);
-    b = x86_assemble(b32, opcode_aaa, x86_make_operands_one(x86_make_operand_imm(b8, 2)));
-    assert(is_error(global_error));
-    if (!is_error(global_error))
-    {
-        free(b.pointer);
-    }
 }
 
 void test_inst_aad()
@@ -57,10 +49,25 @@ void test_inst_aas()
     free(b.pointer);
 }
 
+void test_inst_adc()
+{
+    bytes b = x86_assemble(b32, opcode_adc, x86_make_operands_two(x86_make_operand_reg(eax), x86_make_operand_reg(ebx)));
+    assert(b.len == 2 && "test_inst_adc");
+    fprintf(stderr, "%x %x\n", b.pointer[0], b.pointer[1]);
+    assert(b.pointer[0] == 0x11 && b.pointer[1] == 0xd8 && "test_inst_adc");
+    free(b.pointer);
+
+    b = x86_assemble(b32, opcode_adc, x86_make_operands_two(x86_make_operand_reg(eax), x86_make_operand_reg(ebx)));
+    assert(b.len == 2 && "test_inst_adc");
+    assert(b.pointer[0] == 0x11 && b.pointer[1] == 0xd8 && "test_inst_adc");
+    free(b.pointer);
+}
+
 int main()
 {
     test_inst_aaa();
     test_inst_aad();
     test_inst_aam();
+    test_inst_adc();
     return 0;
 }
