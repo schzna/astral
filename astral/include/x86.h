@@ -6,12 +6,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define none -1
+#define none (bit_size)(-1)
 
 #define bitsize_border8 256
 #define bitsize_border16 65536
 #define bitsize_border32 4294967296
 
+//assembler mode
 typedef enum
 {
     x32,
@@ -19,6 +20,7 @@ typedef enum
     x64
 } mode_type;
 
+//bit size type
 typedef enum
 {
     b8,
@@ -27,6 +29,7 @@ typedef enum
     b64
 } bit_size;
 
+//register type
 typedef enum
 {
     al,
@@ -124,12 +127,14 @@ typedef enum
     gs
 } reg;
 
+//alias for immediate size types
 typedef char imm8_type;
 typedef short imm16_type;
 typedef int imm32_type;
 typedef long long imm64_type;
 
-bit_size match_size_imm(long long imm, bit_size size)
+//judge compatibility between the form and an immediate value
+bool match_size_imm(long long imm, bit_size size)
 {
     switch (size)
     {
@@ -145,6 +150,7 @@ bit_size match_size_imm(long long imm, bit_size size)
     return false;
 }
 
+//operand indicator type
 typedef enum
 {
     imm8,
@@ -187,6 +193,7 @@ typedef enum
     r_rax
 } operand_indicator;
 
+//operand type
 typedef enum
 {
     oprand_address,
@@ -194,6 +201,7 @@ typedef enum
     oprand_reg
 } operand_type;
 
+//mnemonics
 typedef enum
 {
     opcode_aaa,
@@ -204,6 +212,7 @@ typedef enum
     opcode_add
 } opecode_type;
 
+//immediate entity
 typedef union
 {
     imm8_type imm8;
@@ -212,17 +221,20 @@ typedef union
     imm64_type imm64;
 } imm_union;
 
+//immediate type
 typedef struct
 {
     imm_union entity;
     bit_size size;
 } immediate;
 
+//used for generating modr/m
 int value_reg(reg r)
 {
     return ((int)r) % 8;
 }
 
+//size of register
 bit_size size_reg(reg r)
 {
     if (r % 32 < 8)
@@ -244,6 +256,7 @@ bit_size size_reg(reg r)
     return none;
 }
 
+//validate a register variable
 void valid_reg(reg r)
 {
     if (!(0 <= r && r < 94))
@@ -252,6 +265,7 @@ void valid_reg(reg r)
     }
 }
 
+//address type
 typedef struct
 {
     int scale;
@@ -337,7 +351,7 @@ typedef struct
     operand_indicator form1, form2;
 } operands_format;
 
-operands_format x86fmt_no = {.size = 0, .form1 = none, .form2 = none};
+operands_format x86fmt_no = {.size = 0, .form1 = (operand_indicator)none, .form2 = (operand_indicator)none};
 
 operands_format x86fmt_al_imm8 = {.size = 2, .form1 = r_al, .form2 = imm8};
 operands_format x86fmt_ax_imm16 = {.size = 2, .form1 = r_ax, .form2 = imm16};
