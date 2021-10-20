@@ -53,13 +53,18 @@ void test_inst_adc()
 {
     bytes b = x86_assemble(x32, opcode_adc, x86_make_operands_two(x86_make_operand_reg(eax), x86_make_operand_reg(ebx)));
     assert(b.len == 2 && "test_inst_adc");
-    fprintf(stderr, "%x %x\n", b.pointer[0], b.pointer[1]);
     assert(b.pointer[0] == 0x11 && b.pointer[1] == 0xd8 && "test_inst_adc");
     free(b.pointer);
 
     b = x86_assemble(x32, opcode_adc, x86_make_operands_two(x86_make_operand_reg(al), x86_make_operand_imm(b8, 12)));
     assert(b.len == 2 && "test_inst_adc");
     assert(b.pointer[0] == 0x14 && b.pointer[1] == 0x0c && "test_inst_adc");
+    free(b.pointer);
+
+    b = x86_assemble(x32, opcode_adc, x86_make_operands_two(x86_make_operand_reg(ax), x86_make_operand_imm(b16, 0x345)));
+    fprintf(stderr, "%x %x %x %x\n", b.pointer[0], b.pointer[1], b.pointer[2], b.pointer[3]);
+    assert(b.len == 4 && "test_inst_adc");
+    assert(b.pointer[0] == 0x66 && b.pointer[1] == 0x15 && b.pointer[2] == 0x45 && b.pointer[3] == 0x03 && "test_inst_adc");
     free(b.pointer);
 }
 

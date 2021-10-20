@@ -914,20 +914,21 @@ bytes x86_encode_imm(immediate imme, bit_size size)
     if (size == b16)
     {
         imm = imme.entity.imm16;
-        res = join_bytes(res, make_bytes_two((imm & 0xff00) / 0x100, imm & 0xff));
+        res = join_bytes(res, make_bytes_two(imm & 0xff, (imm & 0xff00) / 0x100));
         return res;
     }
     if (size == b32)
     {
         imm = imme.entity.imm32;
         res = join_bytes(res, make_bytes_two(
-            (imm & 0xff000000) / 0x1000000,
-            (imm & 0x00ff0000) / 0x10000
+            imm & 0x000000ff,
+            (imm & 0x0000ff00) / 0x100
         ));
         res = join_bytes(res, make_bytes_two(
-            (imm & 0x0000ff00) / 0x100,
-            imm & 0x000000ff
+            (imm & 0x00ff0000) / 0x10000,
+            (imm & 0xff000000) / 0x1000000
         ));
+        
         return res;
     }
     if (size == b64)
@@ -935,21 +936,22 @@ bytes x86_encode_imm(immediate imme, bit_size size)
         imm = imme.entity.imm64;
         res.len = 4;
         res = join_bytes(res, make_bytes_two(
-            imm & 0xff00000000000000 / 0x100000000000000,
-            imm & 0x00ff000000000000 / 0x1000000000000
+            imm & 0x000000ff,
+            (imm & 0x0000ff00) / 0x100
         ));
         res = join_bytes(res, make_bytes_two(
-            imm & 0x0000ff0000000000 / 0x10000000000,
-            imm & 0x000000ff00000000 / 0x100000000
+            (imm & 0x00ff0000) / 0x10000,
+            (imm & 0xff000000) / 0x1000000
         ));
         res = join_bytes(res, make_bytes_two(
-            (imm & 0xff000000) / 0x1000000,
-            (imm & 0x00ff0000) / 0x10000
+            imm & 0x000000ff00000000 / 0x100000000,
+            imm & 0x0000ff0000000000 / 0x10000000000
         ));
         res = join_bytes(res, make_bytes_two(
-            (imm & 0x0000ff00) / 0x100,
-            imm & 0x000000ff
+            imm & 0x00ff000000000000 / 0x1000000000000,
+            imm & 0xff00000000000000 / 0x100000000000000
         ));
+        
         return res;
     }
     return res;
