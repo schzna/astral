@@ -296,7 +296,7 @@ bool match_addr_full(address addr, reg base, reg index, int scale)
 
 void valid_addr(address addr)
 {
-    if (addr.base != none && addr.index != none)
+    if (addr.base != (reg)none && addr.index != (reg)none)
     {
         if (size_reg(addr.base) != size_reg(addr.index))
         {
@@ -384,6 +384,7 @@ operands_format x86fmt_r64_rm64 = {.size = 2, .form1 = reg64, .form2 = rm64};
 typedef struct
 {
     bool sib;
+    bool modrm;
     int rm_i, imm_i, reg_i;
     bit_size imm_type;
     int digit;
@@ -513,6 +514,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
     res.fmt.reg_i = -1;
     res.fmt.rm_i = -1;
     res.fmt.digit = -1;
+    res.fmt.modrm = true;
 
     bool flag_x64 = false;
     bool flag_comp = false;
@@ -538,7 +540,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.imm_i = 0;
             res.fmt.imm_type = b8;
         }
-        if (x86_match_oprands(x86fmt_no, oprands))
+        else if (x86_match_oprands(x86fmt_no, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -553,7 +555,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             flag_comp = true;
             res.code = make_bytes_two(0xd4, 0x0a);
         }
-        if (x86_match_oprands(x86fmt_imm8, oprands))
+        else if (x86_match_oprands(x86fmt_imm8, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -582,8 +584,9 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.imm_type = b8;
             res.fmt.imm_i = 1;
             res.fmt.reg_i = 0;
+            res.fmt.modrm = false;
         }
-        if (x86_match_oprands(x86fmt_ax_imm16, oprands))
+        else if (x86_match_oprands(x86fmt_ax_imm16, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -593,7 +596,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.imm_i = 1;
             res.fmt.reg_i = 0;
         }
-        if (x86_match_oprands(x86fmt_eax_imm32, oprands))
+        else if (x86_match_oprands(x86fmt_eax_imm32, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -603,7 +606,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.imm_i = 1;
             res.fmt.reg_i = 0;
         }
-        if (x86_match_oprands(x86fmt_rax_imm32, oprands))
+        else if (x86_match_oprands(x86fmt_rax_imm32, oprands))
         {
             matched = true;
             flag_comp = false;
@@ -613,7 +616,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.imm_i = 1;
             res.fmt.reg_i = 0;
         }
-        if (x86_match_oprands(x86fmt_rm8_imm8, oprands))
+        else if (x86_match_oprands(x86fmt_rm8_imm8, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -624,7 +627,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.rm_i = 0;
             res.fmt.digit = 2;
         }
-        if (x86_match_oprands(x86fmt_rm16_imm16, oprands))
+        else if (x86_match_oprands(x86fmt_rm16_imm16, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -635,7 +638,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.rm_i = 0;
             res.fmt.digit = 2;
         }
-        if (x86_match_oprands(x86fmt_rm32_imm32, oprands))
+        else if (x86_match_oprands(x86fmt_rm32_imm32, oprands))
         {
 
             matched = true;
@@ -647,7 +650,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.rm_i = 0;
             res.fmt.digit = 2;
         }
-        if (x86_match_oprands(x86fmt_rm64_imm32, oprands))
+        else if (x86_match_oprands(x86fmt_rm64_imm32, oprands))
         {
             matched = true;
             flag_comp = false;
@@ -658,7 +661,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.rm_i = 0;
             res.fmt.digit = 2;
         }
-        if (x86_match_oprands(x86fmt_rm8_r8, oprands))
+        else if (x86_match_oprands(x86fmt_rm8_r8, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -668,7 +671,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.rm_i = 0;
             res.fmt.reg_i = 1;
         }
-        if (x86_match_oprands(x86fmt_rm16_r16, oprands))
+        else if (x86_match_oprands(x86fmt_rm16_r16, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -678,7 +681,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.rm_i = 0;
             res.fmt.reg_i = 1;
         }
-        if (x86_match_oprands(x86fmt_rm32_r32, oprands))
+        else if (x86_match_oprands(x86fmt_rm32_r32, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -688,7 +691,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.rm_i = 0;
             res.fmt.reg_i = 1;
         }
-        if (x86_match_oprands(x86fmt_rm64_r64, oprands))
+        else if (x86_match_oprands(x86fmt_rm64_r64, oprands))
         {
             matched = true;
             flag_comp = false;
@@ -698,7 +701,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.rm_i = 0;
             res.fmt.reg_i = 1;
         }
-        if (!matched && x86_match_oprands(x86fmt_r8_rm8, oprands))
+        else if (!matched && x86_match_oprands(x86fmt_r8_rm8, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -708,7 +711,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.rm_i = 0;
             res.fmt.reg_i = 1;
         }
-        if (!matched && x86_match_oprands(x86fmt_r16_rm16, oprands))
+        else if (!matched && x86_match_oprands(x86fmt_r16_rm16, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -718,7 +721,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.rm_i = 0;
             res.fmt.reg_i = 1;
         }
-        if (!matched && x86_match_oprands(x86fmt_r32_rm32, oprands))
+        else if (!matched && x86_match_oprands(x86fmt_r32_rm32, oprands))
         {
             matched = true;
             flag_comp = true;
@@ -728,7 +731,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.rm_i = 0;
             res.fmt.reg_i = 1;
         }
-        if (!matched && x86_match_oprands(x86fmt_r64_rm64, oprands))
+        else if (!matched && x86_match_oprands(x86fmt_r64_rm64, oprands))
         {
             matched = true;
             flag_comp = false;
@@ -905,44 +908,48 @@ bytes x86_encode_imm(immediate imme, bit_size size)
     if (size == b8)
     {
         imm = imme.entity.imm8;
-        res.len = 1;
-        res.pointer = (byte *)calloc(sizeof(byte), 1);
-        res.pointer[0] = imm & 0xff;
+        res = join_bytes(res, make_bytes_one(imm & 0xff));
         return res;
     }
     if (size == b16)
     {
         imm = imme.entity.imm16;
-        res.len = 2;
-        res.pointer = (byte *)calloc(sizeof(byte), 2);
-        res.pointer[0] = imm & 0x00ff;
-        res.pointer[1] = (imm & 0xff00) / 0x100;
+        res = join_bytes(res, make_bytes_two((imm & 0xff00) / 0x100, imm & 0xff));
         return res;
     }
     if (size == b32)
     {
         imm = imme.entity.imm32;
-        res.len = 4;
-        res.pointer = (byte *)calloc(sizeof(byte), 4);
-        res.pointer[3] = imm & 0x000000ff;
-        res.pointer[2] = (imm & 0x0000ff00) / 0x100;
-        res.pointer[1] = (imm & 0x00ff0000) / 0x10000;
-        res.pointer[0] = (imm & 0xff000000) / 0x1000000;
+        res = join_bytes(res, make_bytes_two(
+            (imm & 0xff000000) / 0x1000000,
+            (imm & 0x00ff0000) / 0x10000
+        ));
+        res = join_bytes(res, make_bytes_two(
+            (imm & 0x0000ff00) / 0x100,
+            imm & 0x000000ff
+        ));
         return res;
     }
     if (size == b64)
     {
         imm = imme.entity.imm64;
         res.len = 4;
-        res.pointer = (byte *)calloc(sizeof(byte), 8);
-        res.pointer[0] = imm & 0x000000ff;
-        res.pointer[1] = imm & 0x0000ff00 / 0x100;
-        res.pointer[2] = imm & 0x00ff0000 / 0x10000;
-        res.pointer[3] = imm & 0xff000000 / 0x1000000;
-        res.pointer[4] = imm & 0x000000ff00000000 / 0x100000000;
-        res.pointer[5] = imm & 0x0000ff0000000000 / 0x10000000000;
-        res.pointer[6] = imm & 0x00ff000000000000 / 0x1000000000000;
-        res.pointer[7] = imm & 0xff00000000000000 / 0x100000000000000;
+        res = join_bytes(res, make_bytes_two(
+            imm & 0xff00000000000000 / 0x100000000000000,
+            imm & 0x00ff000000000000 / 0x1000000000000
+        ));
+        res = join_bytes(res, make_bytes_two(
+            imm & 0x0000ff0000000000 / 0x10000000000,
+            imm & 0x000000ff00000000 / 0x100000000
+        ));
+        res = join_bytes(res, make_bytes_two(
+            (imm & 0xff000000) / 0x1000000,
+            (imm & 0x00ff0000) / 0x10000
+        ));
+        res = join_bytes(res, make_bytes_two(
+            (imm & 0x0000ff00) / 0x100,
+            imm & 0x000000ff
+        ));
         return res;
     }
     return res;
@@ -955,7 +962,7 @@ bytes x86_encode_oprands(inst_info fmt, operands oprands)
     info.fmt = fmt;
     info.code = make_bytes(0, 0);
 
-    if (fmt.reg_i >= 0 || fmt.rm_i >= 0)
+    if ((fmt.reg_i >= 0 || fmt.rm_i >= 0) && fmt.modrm)
     {
         info = x86_gen_modrm(fmt, oprands);
     }
@@ -971,7 +978,7 @@ bytes x86_encode_oprands(inst_info fmt, operands oprands)
             info.code = join_bytes(info.code, x86_gen_sib(oprands.array[fmt.rm_i].entity.addr));
         }
     }
-    if (fmt.imm_type >= 0 && fmt.imm_i >= 0 && fmt.imm_i <= 1)
+    if (fmt.imm_i >= 0 && fmt.imm_i <= 1)
     {
         if (!initialized)
         {
