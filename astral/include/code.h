@@ -94,6 +94,10 @@ bytes make_bytes_three(byte b1, byte b2, byte b3)
 
 bytes join_bytes(bytes b1, bytes b2)
 {
+    if(b1.len==0)
+        return b2;
+    if(b2.len==0)
+        return b1;
     bytes res;
     res.len = b1.len + b2.len;
     res.pointer = (byte *)calloc(sizeof(byte), res.len);

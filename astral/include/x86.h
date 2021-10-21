@@ -514,6 +514,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
     res.fmt.reg_i = -1;
     res.fmt.rm_i = -1;
     res.fmt.digit = -1;
+    res.fmt.imm_i = -1;
     res.fmt.modrm = true;
 
     bool flag_x64 = false;
@@ -595,6 +596,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.imm_type = b16;
             res.fmt.imm_i = 1;
             res.fmt.reg_i = 0;
+            res.fmt.modrm = false;
         }
         else if (x86_match_oprands(x86fmt_eax_imm32, oprands))
         {
@@ -605,6 +607,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.imm_type = b32;
             res.fmt.imm_i = 1;
             res.fmt.reg_i = 0;
+            res.fmt.modrm = false;
         }
         else if (x86_match_oprands(x86fmt_rax_imm32, oprands))
         {
@@ -615,6 +618,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             res.fmt.imm_type = b64;
             res.fmt.imm_i = 1;
             res.fmt.reg_i = 0;
+            res.fmt.modrm = false;
         }
         else if (x86_match_oprands(x86fmt_rm8_imm8, oprands))
         {
@@ -787,18 +791,15 @@ pair_code_fmt x86_gen_modrm(inst_info fmt, operands oprands)
     res.fmt = fmt;
     operand r = oprands.array[fmt.reg_i];
     operand rm = oprands.array[fmt.rm_i];
+
     byte b = 0;
     b += ((fmt.digit == -1) ? value_reg(r.entity.r) : fmt.digit) * 8;
 
     if (rm.type == oprand_reg)
     {
         valid_reg(rm.entity.r);
-        if (size_reg(rm.entity.r) != size_reg(r.entity.r))
-        {
-            error_msg(global_error, "Different size of 2 registers");
-        }
         b += 0b11000000;
-        b += ((fmt.digit == -1) ? value_reg(rm.entity.r) : fmt.digit);
+        b += value_reg(rm.entity.r);
     }
     else
     {
@@ -966,6 +967,7 @@ bytes x86_encode_oprands(inst_info fmt, operands oprands)
 
     if ((fmt.reg_i >= 0 || fmt.rm_i >= 0) && fmt.modrm)
     {
+        initialized = true;
         info = x86_gen_modrm(fmt, oprands);
     }
     if (info.fmt.sib)
