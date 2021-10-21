@@ -1,6 +1,7 @@
 # astral
 
 astral will be an assembler.
+written in C.
 
 ## License
 
@@ -12,5 +13,4 @@ elf.h that astral contains is a part of GNU C Library.
 
 ## Memo
 
-オペコードのif文のコードがクソ長くなるのどうしよう～
-と悩んでいます。アセンブラならしょうがないかという感じもある。
+アドレスがオペランドに来た場合が怪しい
