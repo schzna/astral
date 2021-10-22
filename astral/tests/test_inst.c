@@ -59,6 +59,10 @@ void test_inst_adc()
     b = x86_assemble(x32, opcode_adc, x86_make_operands_two(x86_make_operand_reg(bl), x86_make_operand_imm(b8, 0x12)));
     assert_code("test_inst_adc", b, 0x80, 0xd3, 0x12);
     free(b.pointer);
+
+    b = x86_assemble(x32, opcode_adc, x86_make_operands_two(x86_make_operand_reg(cx), x86_make_operand_imm(b16, 0x1324)));
+    assert_code("test_inst_adc", b, 0x66, 0x81, 0xd1, 0x24, 0x13);
+    free(b.pointer);
 }
 
 int main()

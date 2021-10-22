@@ -12,9 +12,11 @@ void assert_code(const char *msg, bytes code, ...){
     size_t i = 0;
     va_start(ap, code);
     bool error = false;
+    byte tmp=0;
     while (i < code.len)
     {
-        if(code.pointer[i] != (byte)va_arg(ap, int)){
+        tmp = (byte)va_arg(ap, int);
+        if(code.pointer[i] != tmp){
             error = true;
             break;
         }
@@ -22,6 +24,21 @@ void assert_code(const char *msg, bytes code, ...){
     }
     if(error){
         fprintf(stderr, msg);
+        fprintf(stderr, "\n");
+        for (size_t j = 0; j < code.len; j++)
+        {
+            fprintf(stderr, "0x%x ", code.pointer[j]);
+        }
+        fprintf(stderr, "\n");
+        for (size_t j = 0; j < code.len; j++)
+        {
+            if(j==i){
+                fprintf(stderr, "^0x%x", tmp);
+            }else{
+                fprintf(stderr, "     ");
+            }
+        }
+        fprintf(stderr, "\n");
         assert(false);
     }
     va_end(ap);

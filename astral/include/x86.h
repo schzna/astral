@@ -636,7 +636,7 @@ pair_code_fmt x86_encode_opcode(mode_type mode, opecode_type opcode, operands op
             matched = true;
             flag_comp = true;
             flag_x64 = true;
-            res.code = make_bytes_one(0x81);
+            res.code = make_bytes_two(0x66, 0x81);
             res.fmt.imm_type = b16;
             res.fmt.imm_i = 1;
             res.fmt.rm_i = 0;
