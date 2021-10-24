@@ -4,7 +4,9 @@
 #include "code.h"
 #include "error.h"
 #include <stdbool.h>
+#include <string.h>
 #include <stddef.h>
+#include <ctype.h>
 
 #define none (bit_size)(-1)
 
@@ -150,6 +152,17 @@ bool match_size_imm(long long imm, bit_size size)
     return false;
 }
 
+bit_size least_size_imm(long long imm){
+    if(imm < bitsize_border8){
+        return b8;
+    }else if(imm < bitsize_border16){
+        return b16;
+    }else if(imm < bitsize_border32){
+        return b32;
+    }
+    return b64;
+}
+
 //operand indicator type
 typedef enum
 {
@@ -196,6 +209,7 @@ typedef enum
 //operand type
 typedef enum
 {
+    oprand_nonetype=-1,
     oprand_address,
     oprand_imm,
     oprand_reg
@@ -204,6 +218,7 @@ typedef enum
 //mnemonics
 typedef enum
 {
+    opcode_none = -1,
     opcode_aaa,
     opcode_aad,
     opcode_aam,
@@ -211,6 +226,21 @@ typedef enum
     opcode_adc,
     opcode_add
 } opecode_type;
+
+opecode_type x86_str2opcode(char* str){
+    if(strcmp(str, "aaa")==0){
+        return opcode_aaa;
+    }else if(strcmp(str, "aad")==0){
+        return opcode_aad;
+    }else if(strcmp(str, "aam")==0){
+        return opcode_aam;
+    }else if(strcmp(str, "aas")==0){
+        return opcode_aas;
+    }else if(strcmp(str, "adc")==0){
+        return opcode_adc;
+    }
+    return opcode_none;
+}
 
 //immediate entity
 typedef union
@@ -322,6 +352,8 @@ typedef struct
     operand_type type;
 } operand;
 
+operand operand_none = {.type = oprand_nonetype};
+
 operand x86_make_operand_imm(bit_size size, long long val)
 {
     operand res;
@@ -337,6 +369,32 @@ operand x86_make_operand_reg(reg r)
     res.type = oprand_reg;
     res.entity.r = r;
     return res;
+}
+
+operand x86_str2oprand(char* str){
+    if(strcmp(str, "al") == 0){
+        return x86_make_operand_reg(al);
+    }
+    if(isdigit(str[0])){
+        long long val = 0, radix = 10;
+        size_t index = 0;
+        bool hexmode = str[1]=='x';
+        if(hexmode){
+            index = 2;
+            radix=16;
+        }
+        while(str[index]!='\0'){
+            val *= radix;
+            if(hexmode && !isdigit(str[index])){
+                val += str[index] - 'a';
+            }else{
+                val += str[index] - '0';
+            }
+            index++;
+        }
+        return x86_make_operand_imm(least_size_imm(val), val);
+    }
+    return operand_none;
 }
 
 typedef struct
