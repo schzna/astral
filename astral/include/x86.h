@@ -371,9 +371,218 @@ operand x86_make_operand_reg(reg r)
     return res;
 }
 
-operand x86_str2oprand(char* str){
+reg x86_str2reg(char*str){
     if(strcmp(str, "al") == 0){
-        return x86_make_operand_reg(al);
+        return al;
+    }
+    if(strcmp(str, "bl") == 0){
+        return bl;
+    }
+    if(strcmp(str, "cl") == 0){
+        return cl;
+    }
+    if(strcmp(str, "dl") == 0){
+        return dl;
+    }
+
+    if(strcmp(str, "ah") == 0){
+        return ah;
+    }
+    if(strcmp(str, "bh") == 0){
+        return bh;
+    }
+    if(strcmp(str, "ch") == 0){
+        return ch;
+    }
+    if(strcmp(str, "dh") == 0){
+        return dh;
+    }
+
+    if(strcmp(str, "ax") == 0){
+        return ax;
+    }
+    if(strcmp(str, "bx") == 0){
+        return bx;
+    }
+    if(strcmp(str, "cx") == 0){
+        return cx;
+    }
+    if(strcmp(str, "dx") == 0){
+        return dx;
+    }
+
+    if(strcmp(str, "sp") == 0){
+        return sp;
+    }
+    if(strcmp(str, "bp") == 0){
+        return bp;
+    }
+    if(strcmp(str, "si") == 0){
+        return si;
+    }
+    if(strcmp(str, "di") == 0){
+        return di;
+    }
+
+    if(strcmp(str, "eax") == 0){
+        return eax;
+    }
+    if(strcmp(str, "ebx") == 0){
+        return ebx;
+    }
+    if(strcmp(str, "ecx") == 0){
+        return ecx;
+    }
+    if(strcmp(str, "edx") == 0){
+        return edx;
+    }
+
+    if(strcmp(str, "esp") == 0){
+        return esp;
+    }
+    if(strcmp(str, "ebp") == 0){
+        return ebp;
+    }
+    if(strcmp(str, "esi") == 0){
+        return esi;
+    }
+    if(strcmp(str, "edi") == 0){
+        return edi;
+    }
+
+    if(strcmp(str, "rax") == 0){
+        return rax;
+    }
+    if(strcmp(str, "rbx") == 0){
+        return rbx;
+    }
+    if(strcmp(str, "rcx") == 0){
+        return rcx;
+    }
+    if(strcmp(str, "rdx") == 0){
+        return rdx;
+    }
+
+    if(strcmp(str, "rsp") == 0){
+        return rsp;
+    }
+    if(strcmp(str, "rbp") == 0){
+        return rbp;
+    }
+    if(strcmp(str, "rsi") == 0){
+        return rsi;
+    }
+    if(strcmp(str, "rdi") == 0){
+        return rdi;
+    }
+
+    if(strcmp(str, "r8l") == 0){
+        return r8l;
+    }
+    if(strcmp(str, "r9l") == 0){
+        return r9l;
+    }
+    if(strcmp(str, "r10l") == 0){
+        return r10l;
+    }
+    if(strcmp(str, "r11l") == 0){
+        return r11l;
+    }
+    if(strcmp(str, "r12l") == 0){
+        return r12l;
+    }
+    if(strcmp(str, "r13l") == 0){
+        return r13l;
+    }
+    if(strcmp(str, "r14l") == 0){
+        return r14l;
+    }
+    if(strcmp(str, "r15l") == 0){
+        return r15l;
+    }
+
+    if(strcmp(str, "r8w") == 0){
+        return r8w;
+    }
+    if(strcmp(str, "r9w") == 0){
+        return r9w;
+    }
+    if(strcmp(str, "r10w") == 0){
+        return r10w;
+    }
+    if(strcmp(str, "r11w") == 0){
+        return r11w;
+    }
+    if(strcmp(str, "r12w") == 0){
+        return r12w;
+    }
+    if(strcmp(str, "r13w") == 0){
+        return r13w;
+    }
+    if(strcmp(str, "r14w") == 0){
+        return r14w;
+    }
+    if(strcmp(str, "r15w") == 0){
+        return r15w;
+    }
+
+    if(strcmp(str, "r8d") == 0){
+        return r8d;
+    }
+    if(strcmp(str, "r9d") == 0){
+        return r9d;
+    }
+    if(strcmp(str, "r10d") == 0){
+        return r10d;
+    }
+    if(strcmp(str, "r11d") == 0){
+        return r11d;
+    }
+    if(strcmp(str, "r12d") == 0){
+        return r12d;
+    }
+    if(strcmp(str, "r13d") == 0){
+        return r13d;
+    }
+    if(strcmp(str, "r14d") == 0){
+        return r14d;
+    }
+    if(strcmp(str, "r15d") == 0){
+        return r15d;
+    }
+
+    if(strcmp(str, "r8") == 0){
+        return r8;
+    }
+    if(strcmp(str, "r9") == 0){
+        return r9;
+    }
+    if(strcmp(str, "r10") == 0){
+        return r10;
+    }
+    if(strcmp(str, "r11") == 0){
+        return r11;
+    }
+    if(strcmp(str, "r12") == 0){
+        return r12;
+    }
+    if(strcmp(str, "r13") == 0){
+        return r13;
+    }
+    if(strcmp(str, "r14") == 0){
+        return r14;
+    }
+    if(strcmp(str, "r15") == 0){
+        return r15;
+    }
+
+    return (reg)-1;
+}
+
+operand x86_str2oprand(char* str){
+    reg r = x86_str2reg(str);
+    if(r != (reg)-1){
+        return x86_make_operand_reg(r);
     }
     if(isdigit(str[0])){
         long long val = 0, radix = 10;
