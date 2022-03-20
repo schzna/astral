@@ -29,7 +29,7 @@ void assert_code(const char *msg, bytes code, ...){
         {
             fprintf(stderr, "0x%x ", code.pointer[j]);
         }
-        fprintf(stderr, "\n");
+        fprintf(stderr, "%s\n", msg);
         for (size_t j = 0; j < code.len; j++)
         {
             if(j==i){
