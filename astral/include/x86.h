@@ -17,7 +17,7 @@
 //assembler mode
 typedef enum
 {
-    x32,
+    x86,
     compatibility,
     x64
 } mode_type;
@@ -230,13 +230,17 @@ typedef enum
 opecode_type x86_str2opcode(char* str){
     if(strcmp(str, "aaa")==0){
         return opcode_aaa;
-    }else if(strcmp(str, "aad")==0){
+    }
+    if(strcmp(str, "aad")==0){
         return opcode_aad;
-    }else if(strcmp(str, "aam")==0){
+    }
+    if(strcmp(str, "aam")==0){
         return opcode_aam;
-    }else if(strcmp(str, "aas")==0){
+    }
+    if(strcmp(str, "aas")==0){
         return opcode_aas;
-    }else if(strcmp(str, "adc")==0){
+    }
+    if(strcmp(str, "adc")==0){
         return opcode_adc;
     }
     return opcode_none;
@@ -324,6 +328,14 @@ bool match_addr_full(address addr, reg base, reg index, int scale)
     return (addr.base == base && addr.index == index && addr.scale == scale);
 }
 
+bool match_addr_size(address addr, bit_size size){
+    switch(size){
+    case b16:
+        
+        break;
+    }
+}
+
 void valid_addr(address addr)
 {
     if (addr.base != (reg)none && addr.index != (reg)none)
@@ -368,6 +380,27 @@ operand x86_make_operand_reg(reg r)
     operand res;
     res.type = oprand_reg;
     res.entity.r = r;
+    return res;
+}
+
+operand x86_make_operand_addr(reg base, reg index, int scale, long long disp)
+{
+    operand res;
+    res.type = oprand_address;
+    res.entity.addr.absolute = false;
+    res.entity.addr.base = base;
+    res.entity.addr.index = index;
+    res.entity.addr.scale = scale;
+    res.entity.addr.addr = disp;
+    return res;
+}
+
+operand x86_make_operand_absoluteaddr(long long addr)
+{
+    operand res;
+    res.type = oprand_address;
+    res.entity.addr.absolute = true;
+    res.entity.addr.addr = addr;
     return res;
 }
 
@@ -702,19 +735,10 @@ bool x86_match_oprand(operand_indicator form, operand oprand)
     }
     if (oprand.type == oprand_address)
     {
-        switch (size_addr(oprand.entity.addr))
+        switch (form)
         {
-        case b8:
-            return form == rm8 || form == m8;
-            break;
-        case b16:
-            return form == rm16 || form == m16;
-            break;
-        case b32:
-            return form == rm32 || form == m32;
-            break;
-        case b64:
-            return form == rm64 || form == m64;
+        case rm8:
+            
             break;
         default:
             break;
